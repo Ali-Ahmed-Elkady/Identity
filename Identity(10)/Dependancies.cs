@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+using Hangfire;
 using Identity_10_.Authentaction;
 using Identity_10_.Helper;
 using Identity_10_.Models.DataBase;
@@ -26,6 +27,7 @@ public static class Dependancies
         services.AddSwagger();
         services.AddScopedServices();
         services.AddAutoMapper();
+        services.AddHangFire(configuration);
         services.AddJwt(configuration);
         return services;
     }
@@ -114,6 +116,18 @@ public static class Dependancies
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings?.Key!))
             };
         });
+        return services;
+    }
+    private static IServiceCollection AddHangFire(this IServiceCollection services, IConfiguration configuration) 
+    {
+        services.AddHangfire(config => config
+       .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+       .UseSimpleAssemblyNameTypeSerializer()
+       .UseRecommendedSerializerSettings()
+       .UseSqlServerStorage(configuration.GetConnectionString("WorkConnnection")));
+
+        // Add the processing server as IHostedService
+        services.AddHangfireServer();
         return services;
     }
 }    
